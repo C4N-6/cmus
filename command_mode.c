@@ -2940,11 +2940,36 @@ int parse_command(const char *buf, char **cmdp, char **argp)
 	if (cmd_len == 0)
 		return 0;
 
-	*cmdp = xstrndup(buf + cmd_start, cmd_len);
-	if (arg_start == arg_end) {
-		*argp = NULL;
+	char *command = xstrndup(buf + cmd_start, cmd_len);
+
+	struct alias *found_alias = get_alias(command);
+
+	if (found_alias != NULL) {
+		int return_val;
+
+		if (arg_start == arg_end) {
+			return_val = parse_command(found_alias->command, cmdp, argp);
+		} else {
+			char *argument = xstrndup(buf + arg_start, arg_end - arg_start);
+			char *new_buf = xstrjoin(found_alias->command, argument);
+
+			return_val = parse_command(new_buf, cmdp, argp);
+
+			free(argument);
+			free(new_buf);
+		}
+
+		free(command);
+		command = NULL;
+
+		return return_val;
 	} else {
-		*argp = xstrndup(buf + arg_start, arg_end - arg_start);
+		*cmdp = command;
+		if (arg_start == arg_end) {
+			*argp = NULL;
+		} else {
+			*argp = xstrndup(buf + arg_start, arg_end - arg_start);
+		}
 	}
 	return 1;
 }
