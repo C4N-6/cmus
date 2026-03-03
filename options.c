@@ -41,6 +41,7 @@
 #include "debug.h"
 #include "discid.h"
 #include "mpris.h"
+#include "alias.h"
 #ifdef HAVE_CONFIG
 #include "config/curses.h"
 #endif
@@ -1913,6 +1914,11 @@ void options_exit(void)
 			fprintf(f, "bind %s %s %s\n", key_context_names[i], b->key->name, b->cmd);
 			b = b->next;
 		}
+	}
+
+	/* save aliases */
+	for (struct alias_node *curr = alias_list; curr != NULL; curr = curr->next) {
+		fprintf(f, "alias %s=%s\n", curr->alias.name, curr->alias.command);
 	}
 
 	/* save filters */
