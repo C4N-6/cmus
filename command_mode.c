@@ -373,21 +373,30 @@ static void cmd_add_alias(char *arg)
 {
 	char *value = NULL;
 	int i;
+	bool has_value = false;
 
 	for (i = 0; arg[i]; i++) {
 		if (arg[i] == '=') {
 			arg[i] = 0;
 			value = &arg[i + 1];
+			has_value = true;
 			break;
 		}
 	}
-	if (value) {
-		add_alias(arg, value);
-	} else {
-		if (!delete_alias(arg)) {
+
+	if (!has_value) {
+		struct alias *found_alias = get_alias(arg);
+		if (found_alias == NULL) {
 			error_msg("alias not found\n");
+		} else {
+			info_msg("%s=%s\n", arg, found_alias->command);
 		}
+	} else if (*value != '\0') {
+		add_alias(arg, value);
+	} else if (!delete_alias(arg)) {
+		error_msg("alias not found for removal\n");
 	}
+	info_msg("alias %s was removed\n", arg);
 }
 
 static void cmd_clear(char *arg)
