@@ -3014,7 +3014,7 @@ int parse_command(const char *buf, char **cmdp, char **argp)
 			return_val = parse_command(found_alias->command, cmdp, argp);
 		} else {
 			char *argument = xstrndup(buf + arg_start, arg_end - arg_start);
-			char *new_buf = xstrjoin(found_alias->command, argument);
+			char *new_buf = xstrjoin(found_alias->command," ", argument);
 
 			return_val = parse_command(new_buf, cmdp, argp);
 
