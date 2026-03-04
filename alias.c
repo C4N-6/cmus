@@ -7,10 +7,8 @@ struct alias_node *alias_list = NULL;
 
 struct alias *get_alias(char *name)
 {
-	int name_len = strlen(name);
-
 	for (struct alias_node *i = alias_list; i != NULL; i = i->next) {
-		if (strncmp(i->alias.name, name, name_len) == 0) {
+		if (strcmp(i->alias.name, name) == 0) {
 			return &i->alias;
 		}
 	}
