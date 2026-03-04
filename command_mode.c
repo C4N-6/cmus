@@ -391,12 +391,18 @@ static void cmd_add_alias(char *arg)
 		} else {
 			info_msg("%s=%s\n", arg, found_alias->command);
 		}
+		return;
 	} else if (*value != '\0') {
 		add_alias(arg, value);
-	} else if (!delete_alias(arg)) {
-		error_msg("alias not found for removal\n");
+		return;
 	}
-	info_msg("alias %s was removed\n", arg);
+	if (!delete_alias(arg)) {
+		error_msg("alias not found for removal\n");
+		return;
+	} else {
+		info_msg("alias %s was removed\n", arg);
+		return;
+	}
 }
 
 static void cmd_clear(char *arg)
@@ -2647,6 +2653,54 @@ static void expand_colorscheme(const char *str)
 	}
 }
 
+static void expand_alias(const char *str)
+{
+	/**
+	 * there is 2 parts of the alias command 
+	 * before the '='
+	 * after the '='
+	 *
+	 * to see which part we are expanding we have to find if there
+	 * is a '=' in the given string
+	 */
+	char *equal = NULL;
+	for (int i = 0; str[i] != '\0'; i++) {
+		if (str[i] == '=') {
+			equal = (char *)str + i;
+			break;
+		}
+	}
+
+	if (equal == NULL) {
+		/* we are expanding before the '=' */
+		int len = strlen(str);
+		PTR_ARRAY(array);
+
+		for (struct alias_node *i = alias_list; i != NULL; i = i->next) {
+			if (strncmp(str, i->alias.name, len) == 0) {
+				ptr_array_add(&array, xstrdup(i->alias.name + len));
+			}
+		}
+
+		if (!array.count)
+			return;
+		if (array.count == 1) {
+			char **ptrs = array.ptrs;
+			char *tmp = xstrjoin(ptrs[0], "=");
+			free(ptrs[0]);
+			ptrs[0] = tmp;
+		}
+
+		tabexp.head = xstrdup(str);
+		tabexp.tails = array.ptrs;
+		tabexp.count = array.count;
+		return;
+	} else {
+		/* we are expanding after the '=' */
+		return;
+	}
+}
+
 static void expand_commands(const char *str);
 
 /* tab exp }}} */
@@ -2654,7 +2708,7 @@ static void expand_commands(const char *str);
 /* sort by name */
 struct command commands[] = {
 	{ "add",                   cmd_add,              1, 1,  expand_add,           0, 0          },
-	{ "alias",                 cmd_add_alias,        1, 1,  NULL,                 0, 0          },
+	{ "alias",                 cmd_add_alias,        1, 1,  expand_alias,         0, 0          },
 	{ "bind",                  cmd_bind,             1, 1,  expand_bind_args,     0, CMD_UNSAFE },
 	{ "browser-up",            cmd_browser_up,       0, 0,  NULL,                 0, 0          },
 	{ "cd",                    cmd_cd,               0, 1,  expand_directories,   0, 0          },
