@@ -2695,10 +2695,46 @@ static void expand_alias(const char *str)
 		tabexp.tails = array.ptrs;
 		tabexp.count = array.count;
 		return;
-	} else {
-		/* we are expanding after the '=' */
+	}
+	/* we are expanding after the '=' */
+	int alias_name_len = equal - str;
+	char *alias_name = xstrndup(str, alias_name_len);
+
+	struct alias* a = get_alias(alias_name);
+
+	free(alias_name);
+	if (a != NULL && equal[1] == '\0'){
+		/* we are at the begining of writhing the command to the alias and we have a alias with the same name */
+		char **array = xnew(char*, 1);
+		array[0] = xstrdup("");
+
+		tabexp.head = xstrjoin(a->name, "=", a->command);
+		tabexp.tails = array;
+		tabexp.count = 1;
 		return;
 	}
+
+	// info_msg("test");
+	/* there is no alias with that name so we are  going to do a normal expand_commands */
+	expand_command_line(equal + 1);
+	if (tabexp.head == NULL) {
+		/* command expand failed */
+		return;
+	}
+
+	/*
+	* tabexp.head is now "com"
+	* tabexp.tails is [ mand1 mand2 ... ]
+	*
+	* need to change tabexp.head to "alias name=com"
+	*/
+
+	char* base = xstrndup(str, equal - str + 1);
+
+	snprintf(expbuf, sizeof(expbuf), "%s%s", base, tabexp.head);
+	free(tabexp.head);
+	tabexp.head = xstrdup(expbuf);
+	free(base);
 }
 
 static void expand_commands(const char *str);
