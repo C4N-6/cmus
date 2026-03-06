@@ -387,9 +387,9 @@ static void cmd_add_alias(char *arg)
 	if (!has_value) {
 		struct alias *found_alias = get_alias(arg);
 		if (found_alias == NULL) {
-			error_msg("alias not found\n");
+			error_msg("Error: no such alias %s\n", arg);
 		} else {
-			info_msg("%s=%s\n", arg, found_alias->command);
+			info_msg("alias: '%s=%s'\n", arg, found_alias->command);
 		}
 		return;
 	} else if (*value != '\0') {
@@ -397,7 +397,7 @@ static void cmd_add_alias(char *arg)
 		return;
 	}
 	if (!delete_alias(arg)) {
-		error_msg("alias not found for removal\n");
+		error_msg("Error: no such alias %s\n", arg);
 		return;
 	} else {
 		info_msg("alias %s was removed\n", arg);
